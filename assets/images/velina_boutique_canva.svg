@@ -1,0 +1,20 @@
+<?xml version="1.0" standalone="no"?>
+<svg id="velinaSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" class="w-full h-full">
+            <rect id="svgBg" width="1000" height="1000" fill="none"/>
+            
+            <!-- VB Monogram Group -->
+            <g id="monogramGroup" fill="#FFFFFF">
+              <!-- Left Top Serif & Thick Stem of V -->
+              <path d="M 232 218 L 398 218 L 398 224 C 362 226 355 242 369 278 L 463 502 C 446 535 424 562 398 580 C 412 544 405 512 389 476 L 284 256 C 271 230 256 225 232 224 Z"/>
+              
+              <!-- Right Thin Stem of V sweeping into B Top Serif -->
+              <path d="M 398 580 C 445 552 487 498 499 422 C 507 372 508 315 514 272 C 517 240 503 226 480 224 L 480 218 L 615 218 C 702 218 758 256 758 308 C 758 348 712 374 636 378 C 736 382 805 424 805 492 C 805 554 734 584 632 584 L 446 584 L 446 578 C 482 572 506 544 522 486 C 538 426 556 380 626 374 C 674 370 692 340 692 304 C 692 258 656 228 598 228 C 558 228 532 254 522 308 C 512 362 509 422 498 468 C 484 524 446 562 398 580 Z M 636 384 C 594 388 576 426 562 478 C 548 530 524 564 486 576 L 626 576 C 698 576 734 538 734 486 C 734 426 692 384 636 384 Z"/>
+            </g>
+
+            <!-- VÉLINA BOUTIQUE Typography (Converted to precision paths & standard luxury serif) -->
+            <g id="textGroup" fill="#FFFFFF" style="display: none;">
+              <!-- Acute Accent on É -->
+              <polygon points="145,700 133,713 136,715 151,703"/>
+              <text x="500" y="774" text-anchor="middle" font-family="'Cormorant Garamond', 'Didot', 'Bodoni MT', 'Times New Roman', serif" font-size="86" font-weight="300" letter-spacing="18">VÉLINA BOUTIQUE</text>
+            </g>
+          </svg>
