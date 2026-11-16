@@ -8,8 +8,10 @@ class DomCleanerCss {
     html.mm-wrapper_opened .mburger, html.mm-wrapper_opened [class*="mburger"],
     html.mm-wrapper_opened a[href*="mobile-menu"], html.mm-wrapper_opened .header-menu-icon,
     html.mm-wrapper_opened .mm-wrapper__blocker a, html.mm-wrapper_opened .mm-wrapper__blocker button,
-    html.mm-wrapper_opened .mm-wrapper__blocker [class*="close"] {
-      display: none !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important;
+    html.mm-wrapper_opened .mm-wrapper__blocker [class*="close"],
+    .mm-btn--close, button.mm-btn_close, .mm-menu__close, [class*="mm-btn"][class*="close"],
+    .mm-wrapper__blocker::before, .mm-wrapper__blocker::after {
+      display: none !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important; width: 0 !important; height: 0 !important;
     }
     .salla-chat-widget, [class*="whatsapp-widget"], [id*="whatsapp-widget"] {
       bottom: 90px !important;
