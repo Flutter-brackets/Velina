@@ -4,8 +4,7 @@ import 'dom_cleaner_css.dart';
 class DomCleanerScript {
   const DomCleanerScript._();
 
-  static final String script =
-      '''
+  static final String script = '''
 (function() {
   function injectSafeStyle() {
     var root = document.head || document.documentElement;
@@ -14,52 +13,37 @@ class DomCleanerScript {
   }
   function hideOuterRedDrawerClose(root) {
     root = root || document;
-    var panel = document.querySelector('#mobile-menu, .mm-menu, .mm-panels, salla-mobile-menu');
-    var pRect = panel ? panel.getBoundingClientRect() : null;
-    var drawerOpen = document.documentElement.classList.contains('mm-wrapper_opened') ||
-      !!document.querySelector('.mm-menu_opened, #mobile-menu.mm-menu_opened, salla-mobile-menu[open]') ||
-      (pRect && pRect.width > 150 && pRect.left >= 0 && pRect.left < window.innerWidth - 50);
-    var menuLeft = (drawerOpen && pRect && pRect.left >= 20) ? pRect.left : 55;
-    var all = root.querySelectorAll('button, a, div, span, [role="button"], .mburger');
+    var panel = document.querySelector('#mobile-menu, .mm-menu, .mm-panels, salla-mobile-menu'), pRect = panel ? panel.getBoundingClientRect() : null;
+    var drawerOpen = document.documentElement.classList.contains('mm-wrapper_opened') || !!document.querySelector('.mm-menu_opened, #mobile-menu.mm-menu_opened, salla-mobile-menu[open]') || (pRect && pRect.width > 150 && pRect.left >= 0 && pRect.left < window.innerWidth - 50);
+    if (!drawerOpen) { var h = root.querySelectorAll('[data-velina-hidden-close="1"]'); for (var k = 0; k < h.length; k++) { delete h[k].dataset.velinaHiddenClose; h[k].style.removeProperty('display'); } return; }
+    var menuLeft = (pRect && pRect.left >= 20) ? pRect.left : 55, all = root.querySelectorAll('button, a, div, span, [role="button"], .mburger');
     for (var i = 0; i < all.length; i++) {
       var el = all[i], r = el.getBoundingClientRect();
-      if (drawerOpen && r.width >= 24 && r.width <= 90 && r.height >= 24 && r.height <= 90 && r.top <= 130 && r.right <= menuLeft + 8) {
-        el.dataset.velinaHiddenClose = '1';
-        el.style.setProperty('display', 'none', 'important');
-      } else if (!drawerOpen && el.dataset.velinaHiddenClose === '1') {
-        delete el.dataset.velinaHiddenClose;
-        el.style.removeProperty('display');
-      }
+      if (r.width >= 24 && r.width <= 90 && r.height >= 24 && r.height <= 90 && r.top <= 130 && r.right <= menuLeft + 8) { el.dataset.velinaHiddenClose = '1'; el.style.setProperty('display', 'none', 'important'); }
     }
-    var hosts = root.querySelectorAll('salla-mobile-menu, salla-modal, [id*="mobile-menu"]');
-    for (var j = 0; j < hosts.length; j++) { if (hosts[j].shadowRoot) hideOuterRedDrawerClose(hosts[j].shadowRoot); }
+    var hosts = root.querySelectorAll('salla-mobile-menu, salla-modal'); for (var j = 0; j < hosts.length; j++) { if (hosts[j].shadowRoot) hideOuterRedDrawerClose(hosts[j].shadowRoot); }
   }
   function liftCartSummary(root) {
+    if (window._velinaScrolling) return;
     root = root || document;
-    var all = root.querySelectorAll('button, a, div, span, p, salla-button');
-    for (var i = 0; i < all.length; i++) {
-      var node = all[i], txt = node.textContent || '';
-      if ((txt.indexOf('إتمام الطلب') !== -1 || txt.indexOf('اتمام الطلب') !== -1) && node.children.length <= 2) {
-        var cur = node;
-        while (cur && cur !== document.body && cur !== document.documentElement) {
-          var cs = window.getComputedStyle(cur);
-          if (cs.position === 'fixed' || cs.position === 'sticky') { cur.style.setProperty('bottom', '82px', 'important'); cur.style.setProperty('z-index', '25', 'important'); break; }
+    var targets = root.querySelectorAll('salla-add-product-button, .cart-submit-wrap, [class*="cart-summary"], [class*="sticky-cart"], form[action*="cart"]');
+    for (var i = 0; i < targets.length; i++) {
+      var node = targets[i], txt = node.textContent || '';
+      if (txt.indexOf('إتمام الطلب') !== -1 || txt.indexOf('اتمام الطلب') !== -1 || node.matches('salla-add-product-button, .cart-submit-wrap, [class*="sticky-cart"]')) {
+        var cur = node; while (cur && cur !== document.body && cur !== document.documentElement) {
+          var cs = window.getComputedStyle(cur); if (cs.position === 'fixed' || cs.position === 'sticky') { cur.style.setProperty('bottom', '82px', 'important'); cur.style.setProperty('z-index', '25', 'important'); break; }
           cur = cur.parentElement;
         }
-        break;
       }
     }
-    var vh = window.innerHeight, vw = window.innerWidth, bars = root.querySelectorAll('div, form, section, footer, salla-add-product-button');
+    var vh = window.innerHeight, vw = window.innerWidth, bars = root.querySelectorAll('salla-add-product-button, .cart-submit-wrap, [class*="cart-summary-sticky"], [class*="sticky-cart"]');
     for (var j = 0; j < bars.length; j++) {
-      var el = bars[j], cs2 = window.getComputedStyle(el);
-      if (el.id === 'velina-clean-style' || el.closest('.salla-chat-widget, [class*="whatsapp"], nav, header') || cs2.display === 'none' || cs2.visibility === 'hidden') continue;
+      var el = bars[j], cs2 = window.getComputedStyle(el); if (cs2.display === 'none' || cs2.visibility === 'hidden') continue;
       if (cs2.position === 'fixed' || cs2.position === 'sticky') {
-        var r = el.getBoundingClientRect();
-        if (r.width >= vw * 0.8 && r.height >= 44 && r.height <= 260 && (vh - r.bottom) <= 15) { el.style.setProperty('bottom', '82px', 'important'); el.style.setProperty('z-index', '25', 'important'); }
+        var r = el.getBoundingClientRect(); if (r.width >= vw * 0.8 && r.height >= 44 && r.height <= 260 && (vh - r.bottom) <= 15) { el.style.setProperty('bottom', '82px', 'important'); el.style.setProperty('z-index', '25', 'important'); }
       }
     }
-    var hosts = root.querySelectorAll('salla-add-product-button, salla-cart-summary');
-    for (var k = 0; k < hosts.length; k++) { if (hosts[k].shadowRoot) liftCartSummary(hosts[k].shadowRoot); }
+    var hosts = root.querySelectorAll('salla-add-product-button, salla-cart-summary'); for (var k = 0; k < hosts.length; k++) { if (hosts[k].shadowRoot) liftCartSummary(hosts[k].shadowRoot); }
   }
   function isVis(e) { return e && window.getComputedStyle(e).display !== 'none' && parseFloat(window.getComputedStyle(e).opacity || '1') > 0.1 && e.getBoundingClientRect().height > 50; }
   function isAnyOverlayOpen() {
@@ -94,9 +78,8 @@ class DomCleanerScript {
     var btns = document.querySelectorAll('button.scroll-top, #scroll-top, .btn-scroll-top, [class*="scroll-top"], .progress-wrap, [aria-label*="top"], [aria-label*="أعلى"]');
     for (var k = 0; k < btns.length; k++) btns[k].style.setProperty('bottom', '90px', 'important');
   }
-  var lastState = null, closeTimer = null, rafPending = false;
+  var lastState = null, closeTimer = null, updateTimer = null;
   function updateOverlay() {
-    rafPending = false;
     injectSafeStyle(); hideOuterRedDrawerClose(); liftCartSummary();
     var isOpen = isAnyOverlayOpen();
     if (isOpen) {
@@ -107,13 +90,20 @@ class DomCleanerScript {
       closeTimer = setTimeout(function() { closeTimer = null; if (!isAnyOverlayOpen()) { lastState = false; updateButtons(false); if (window.flutter_inappwebview && window.flutter_inappwebview.callHandler) window.flutter_inappwebview.callHandler('onModalState', false); } }, 120);
     } else if (lastState === null) { lastState = false; updateButtons(false); }
   }
-  function scheduleUpdate() { if (!rafPending) { rafPending = true; requestAnimationFrame(updateOverlay); } }
-  if (!window._velinaWatcher) {
-    window._velinaWatcher = true; document.addEventListener('DOMContentLoaded', scheduleUpdate);
-    document.addEventListener('click', function() { scheduleUpdate(); setTimeout(scheduleUpdate, 80); setTimeout(scheduleUpdate, 250); }, true);
-    new MutationObserver(scheduleUpdate).observe(document.documentElement, { attributes: true, childList: true, subtree: true });
+  function scheduleUpdate(imm) {
+    if (imm) { if (updateTimer) clearTimeout(updateTimer); updateOverlay(); return; }
+    if (updateTimer) clearTimeout(updateTimer); updateTimer = setTimeout(updateOverlay, 180);
   }
-  scheduleUpdate();
+  if (!window._velinaWatcher) {
+    window._velinaWatcher = true;
+    window.addEventListener('scroll', function() {
+      window._velinaScrolling = true; clearTimeout(window._velinaScrollTimer);
+      window._velinaScrollTimer = setTimeout(function() { window._velinaScrolling = false; scheduleUpdate(true); }, 150);
+    }, { passive: true });
+    document.addEventListener('DOMContentLoaded', function() { scheduleUpdate(true); }); document.addEventListener('click', function() { scheduleUpdate(true); setTimeout(scheduleUpdate, 80); setTimeout(scheduleUpdate, 250); }, true);
+    new MutationObserver(function() { scheduleUpdate(); }).observe(document.documentElement, { attributes: true, childList: true, subtree: true });
+  }
+  scheduleUpdate(true);
 })();
 ''';
 }

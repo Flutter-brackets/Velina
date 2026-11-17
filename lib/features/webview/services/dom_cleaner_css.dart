@@ -5,6 +5,10 @@ class DomCleanerCss {
   static const String css = '''
     body, footer { padding-bottom: 92px !important; }
     #mobile-nav, .mobile-nav-inner, .mobile-nav-outer, .s-bottom-nav, salla-bottom-nav { display: none !important; height: 0 !important; }
+    header, header.store-header, #mainnav, .main-nav-container, .s-header-wrapper {
+      position: sticky !important; top: 0 !important; transform: translateY(0) !important;
+      opacity: 1 !important; visibility: visible !important; z-index: 999 !important;
+    }
     html.mm-wrapper_opened .mburger, html.mm-wrapper_opened [class*="mburger"],
     html.mm-wrapper_opened a[href*="mobile-menu"], html.mm-wrapper_opened .header-menu-icon,
     html.mm-wrapper_opened .mm-wrapper__blocker a, html.mm-wrapper_opened .mm-wrapper__blocker button,
@@ -13,9 +17,7 @@ class DomCleanerCss {
     .mm-wrapper__blocker::before, .mm-wrapper__blocker::after {
       display: none !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important; width: 0 !important; height: 0 !important;
     }
-    .salla-chat-widget, [class*="whatsapp-widget"], [id*="whatsapp-widget"] {
-      bottom: 90px !important;
-    }
+    .salla-chat-widget, [class*="whatsapp-widget"], [id*="whatsapp-widget"] { bottom: 90px !important; }
     button.scroll-top, #scroll-top, .btn-scroll-top, [class*="scroll-top"], .progress-wrap, [class*="progress-wrap"], [aria-label*="top"], [aria-label*="أعلى"] {
       bottom: 90px !important;
     }
