@@ -9,7 +9,11 @@ class WebViewState extends Equatable {
   final bool showScrollToTop;
   final bool isArabic;
   final bool isModalOpen;
+  final bool isDrawerOpen;
   final bool isCheckout;
+  final bool isNavBarVisible;
+  final bool hasCompletedInitialLoad;
+  final bool showInitialLoader;
 
   const WebViewState({
     this.currentTab = 0,
@@ -20,7 +24,11 @@ class WebViewState extends Equatable {
     this.showScrollToTop = false,
     this.isArabic = true,
     this.isModalOpen = false,
+    this.isDrawerOpen = false,
     this.isCheckout = false,
+    this.isNavBarVisible = true,
+    this.hasCompletedInitialLoad = false,
+    this.showInitialLoader = true,
   });
 
   WebViewState copyWith({
@@ -32,7 +40,11 @@ class WebViewState extends Equatable {
     bool? showScrollToTop,
     bool? isArabic,
     bool? isModalOpen,
+    bool? isDrawerOpen,
     bool? isCheckout,
+    bool? isNavBarVisible,
+    bool? hasCompletedInitialLoad,
+    bool? showInitialLoader,
   }) {
     return WebViewState(
       currentTab: currentTab ?? this.currentTab,
@@ -43,7 +55,11 @@ class WebViewState extends Equatable {
       showScrollToTop: showScrollToTop ?? this.showScrollToTop,
       isArabic: isArabic ?? this.isArabic,
       isModalOpen: isModalOpen ?? this.isModalOpen,
+      isDrawerOpen: isDrawerOpen ?? this.isDrawerOpen,
       isCheckout: isCheckout ?? this.isCheckout,
+      isNavBarVisible: isNavBarVisible ?? this.isNavBarVisible,
+      hasCompletedInitialLoad: hasCompletedInitialLoad ?? this.hasCompletedInitialLoad,
+      showInitialLoader: showInitialLoader ?? this.showInitialLoader,
     );
   }
 
@@ -57,6 +73,10 @@ class WebViewState extends Equatable {
     showScrollToTop,
     isArabic,
     isModalOpen,
+    isDrawerOpen,
     isCheckout,
+    isNavBarVisible,
+    hasCompletedInitialLoad,
+    showInitialLoader,
   ];
 }

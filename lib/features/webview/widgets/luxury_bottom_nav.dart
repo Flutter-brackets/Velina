@@ -1,8 +1,7 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_strings.dart';
 
-/// Floating oval luxury bottom navigation bar with frosted glass capsule.
+/// Floating oval luxury bottom navigation bar without BackdropFilter for maximum frame rate.
 class LuxuryBottomNav extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int> onTabSelected;
@@ -22,52 +21,52 @@ class LuxuryBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 58.0,
-      margin: const EdgeInsets.fromLTRB(20.0, 0.0, 20.0, 14.0),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(32.0),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.20), blurRadius: 18.0, offset: const Offset(0, 6)),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(32.0),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 18.0, sigmaY: 18.0),
-          child: Container(
-            color: const Color(0xFF8B725A).withValues(alpha: 0.88),
-            padding: const EdgeInsets.symmetric(horizontal: 10.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: List.generate(_items.length, (index) {
-                final isSelected = index == selectedIndex;
-                final item = _items[index];
-                return GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () => onTabSelected(index),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        isSelected ? item.activeIcon : item.icon,
-                        size: 21.0,
+    return RepaintBoundary(
+      child: Container(
+        height: 58.0,
+        margin: const EdgeInsets.fromLTRB(20.0, 0.0, 20.0, 14.0),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(32.0),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withValues(alpha: 0.16), blurRadius: 16.0, offset: const Offset(0, 6)),
+          ],
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(32.0),
+            color: const Color(0xFF8B725A).withValues(alpha: 0.94),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.24), width: 1.0),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 10.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: List.generate(_items.length, (index) {
+              final isSelected = index == selectedIndex;
+              final item = _items[index];
+              return GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => onTabSelected(index),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      isSelected ? item.activeIcon : item.icon,
+                      size: 21.0,
+                      color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.78),
+                    ),
+                    const SizedBox(height: 2.0),
+                    Text(
+                      item.label,
+                      style: TextStyle(
+                        fontSize: 10.0,
+                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                         color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.78),
                       ),
-                      const SizedBox(height: 2.0),
-                      Text(
-                        item.label,
-                        style: TextStyle(
-                          fontSize: 10.0,
-                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                          color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.78),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }),
-            ),
+                    ),
+                  ],
+                ),
+              );
+            }),
           ),
         ),
       ),

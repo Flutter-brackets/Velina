@@ -24,7 +24,10 @@ class WebViewViewport extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InAppWebView(
-      initialUrlRequest: URLRequest(url: WebUri(AppUrls.baseUrl)),
+      initialUrlRequest: URLRequest(
+        url: WebUri(AppUrls.baseUrl),
+        cachePolicy: URLRequestCachePolicy.USE_PROTOCOL_CACHE_POLICY,
+      ),
       initialSettings: VelinaWebViewSettings.settings,
       initialUserScripts: WebviewScripts.initialUserScripts,
       onWebViewCreated: (c) {
@@ -32,6 +35,10 @@ class WebViewViewport extends StatelessWidget {
         c.addJavaScriptHandler(
           handlerName: 'onModalState',
           callback: (a) => cubit.setModalOpen(a.isNotEmpty && a[0] == true),
+        );
+        c.addJavaScriptHandler(
+          handlerName: 'onDrawerStateChanged',
+          callback: (a) => cubit.setDrawerOpen(a.isNotEmpty && a[0] == true),
         );
         c.addJavaScriptHandler(
           handlerName: 'onCartCount',
@@ -45,14 +52,15 @@ class WebViewViewport extends StatelessWidget {
         }
         return UrlHandlerService.handleUrl(act);
       },
-      onLoadStart: (c, uri) { _inject(c); cubit.onPageStarted(uri); },
+      onLoadStart: (_, uri) => cubit.onPageStarted(uri),
       onProgressChanged: (c, p) => cubit.onProgressChanged(p),
+      onPageCommitVisible: (c, uri) => cubit.onPageCommitVisible(uri),
       onLoadStop: (c, uri) {
         _inject(c);
         cubit.onPageLoaded(uri);
         VelinaWebViewSettings.syncStoreMeta(c, cubit.updateStoreMeta);
       },
-      onUpdateVisitedHistory: (_, u, r) => (r != true) ? cubit.onPageStarted(u) : null,
+      onUpdateVisitedHistory: (_, u, r) => (r != true) ? cubit.syncTabWithUrl(u) : null,
       onScrollChanged: (_, x, y) => cubit.updateScroll(y),
     );
   }

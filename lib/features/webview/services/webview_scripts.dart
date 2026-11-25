@@ -6,55 +6,56 @@ import 'dom_cleaner_script.dart';
 class WebviewScripts {
   const WebviewScripts._();
 
-  /// 100% safe DOM cleaner and modal watcher script.
   static String get safeScript => DomCleanerScript.script;
 
-  /// Pre-configured initial user scripts injected at document start.
-  static final UnmodifiableListView<UserScript> initialUserScripts =
-      UnmodifiableListView<UserScript>([
-        UserScript(
-          source: DomCleanerScript.script,
-          injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
-          forMainFrameOnly: false,
-        ),
-      ]);
+  static const String earlyHideCss =
+      '#mobile-nav, .mobile-nav-inner, .mobile-nav-outer, .s-bottom-nav, salla-bottom-nav, salla-chat-widget, .salla-chat-widget, #wa-widget-send-button { display: none !important; height: 0 !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important; }';
 
-  /// Reliable multi-strategy Salla login modal trigger.
-  static const String loginTriggerJs = '''
-(function openSallaLogin() {
-  if (window.salla && salla.event && typeof salla.event.dispatch === 'function') {
-    salla.event.dispatch('login::open');
-  }
-  var loginModal = document.querySelector('salla-login-modal');
-  if (loginModal) {
-    if (typeof loginModal.open === 'function') loginModal.open();
-    loginModal.setAttribute('open', '');
-  }
-  var triggers = document.querySelectorAll(
-    '[onclick*="login"], [data-modal="login"], button[aria-label*="دخول"], a[href*="/login"], salla-user-menu button, .header-btn[aria-label*="user"]'
-  );
-  for (var i = 0; i < triggers.length; i++) {
-    var btn = triggers[i];
-    if (btn.offsetParent !== null || btn.closest('header')) { btn.click(); break; }
-  }
-  var userMenu = document.querySelector('salla-user-menu');
-  if (userMenu && userMenu.shadowRoot) {
-    var shadowBtn = userMenu.shadowRoot.querySelector('button, a');
-    if (shadowBtn) shadowBtn.click();
-  }
+  static const String earlyHideScript = '''
+(function() {
+  try {
+    var doc = document.documentElement || document.head;
+    if (doc && !document.getElementById('velina-early-hide')) {
+      var s = document.createElement('style');
+      s.id = 'velina-early-hide';
+      s.textContent = '$earlyHideCss';
+      doc.appendChild(s);
+    }
+  } catch (e) {}
 })();
 ''';
 
-  /// Reliable Salla search overlay trigger.
+  static final UnmodifiableListView<UserScript> initialUserScripts =
+      UnmodifiableListView<UserScript>([
+        UserScript(
+          source: earlyHideScript,
+          injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
+          forMainFrameOnly: false,
+        ),
+        UserScript(
+          source: DomCleanerScript.script,
+          injectionTime: UserScriptInjectionTime.AT_DOCUMENT_END,
+          forMainFrameOnly: true,
+        ),
+      ]);
+
+  static const String loginTriggerJs = '''
+(function() {
+  if (window.salla && salla.event && typeof salla.event.dispatch === 'function') salla.event.dispatch('login::open');
+  var m = document.querySelector('salla-login-modal');
+  if (m) { if (typeof m.open === 'function') m.open(); m.setAttribute('open', ''); return; }
+  var btn = document.querySelector('[onclick*="login"], [data-modal="login"], button[aria-label*="دخول"], a[href*="/login"], salla-user-menu button');
+  if (btn) btn.click();
+})();
+''';
+
   static const String searchTriggerJs = '''
 (function() {
   if (window.salla && salla.event && typeof salla.event.dispatch === 'function') {
     try { salla.event.dispatch('search::open'); return; } catch(e) {}
   }
   var s = document.querySelector('salla-search');
-  if (s && typeof s.open === 'function') {
-    try { s.open(); return; } catch(e) {}
-  }
+  if (s && typeof s.open === 'function') { try { s.open(); return; } catch(e) {} }
   var btn = document.querySelector('.header-btn--search, .mob-srch button, .mob-srch a, [data-salla-search]');
   if (btn) btn.click();
 })();

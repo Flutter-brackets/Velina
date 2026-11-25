@@ -10,15 +10,13 @@ import 'services/webview_settings.dart';
 import 'widgets/custom_bottom_nav.dart';
 import 'widgets/luxury_page_loader.dart';
 import 'widgets/offline_screen.dart';
+import 'widgets/webview_progress_bar.dart';
 import 'widgets/webview_viewport.dart';
 
-/// Ultra-performance Salla WebView host with floating oval glass capsule navbar.
 class MainWebViewScreen extends StatelessWidget {
   const MainWebViewScreen({super.key});
-
   @override
-  Widget build(BuildContext context) =>
-      BlocProvider(create: (_) => WebViewCubit(), child: const _MainWebViewContent());
+  Widget build(BuildContext context) => BlocProvider(create: (_) => WebViewCubit(), child: const _MainWebViewContent());
 }
 
 class _MainWebViewContent extends StatefulWidget {
@@ -29,7 +27,7 @@ class _MainWebViewContent extends StatefulWidget {
 }
 
 class _MainWebViewContentState extends State<_MainWebViewContent> {
-  InAppWebViewController? _controller;
+  InAppWebViewController? _c;
 
   @override
   void initState() {
@@ -44,64 +42,67 @@ class _MainWebViewContentState extends State<_MainWebViewContent> {
   }
 
   void _onPendingUrl() {
-    final url = NotificationService.pendingUrl.value;
-    if (url != null && _controller != null) {
-      _controller?.loadUrl(urlRequest: URLRequest(url: WebUri(url)));
+    final u = NotificationService.pendingUrl.value;
+    if (u != null && _c != null) {
+      _c?.loadUrl(urlRequest: URLRequest(url: WebUri(u), cachePolicy: URLRequestCachePolicy.USE_PROTOCOL_CACHE_POLICY));
       NotificationService.clearPendingUrl();
     }
   }
 
   Future<void> _handleBack(bool didPop, dynamic _) async =>
-      didPop ? null : ((await _controller?.canGoBack() ?? false) ? await _controller?.goBack() : await SystemNavigator.pop());
+      didPop ? null : ((await _c?.canGoBack() ?? false) ? await _c?.goBack() : await SystemNavigator.pop());
 
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<WebViewCubit>();
     final isKeyboard = MediaQuery.of(context).viewInsets.bottom > 0;
 
-    return BlocBuilder<WebViewCubit, WebViewState>(
-      builder: (context, state) {
-        final hideNav = isKeyboard || state.isModalOpen;
-        return PopScope(
-          canPop: false,
-          onPopInvokedWithResult: _handleBack,
-          child: Scaffold(
-            backgroundColor: AppColors.creamBackground,
-            extendBody: true,
-            body: SafeArea(
-              bottom: false,
-              child: Stack(
-                children: [
-                  WebViewViewport(cubit: cubit, onCreated: (c) { _controller = c; _onPendingUrl(); }),
-                  LuxuryPageLoader(isLoading: state.isPageLoading, progress: state.progress),
-                  if (state.isOffline) OfflineScreen(onRetry: () => _controller?.reload()),
-                ],
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: _handleBack,
+      child: Scaffold(
+        backgroundColor: AppColors.creamBackground,
+        extendBody: true,
+        body: SafeArea(
+          bottom: false,
+          child: Stack(
+            children: [
+              WebViewViewport(key: const ValueKey('velina_stable_vp'), cubit: cubit, onCreated: (c) { _c = c; _onPendingUrl(); }),
+              const WebviewProgressBar(),
+              BlocBuilder<WebViewCubit, WebViewState>(
+                buildWhen: (p, c) => p.showInitialLoader != c.showInitialLoader || p.hasCompletedInitialLoad != c.hasCompletedInitialLoad,
+                builder: (_, s) => LuxuryPageLoader(isLoading: !s.hasCompletedInitialLoad && s.showInitialLoader, progress: s.progress),
               ),
-            ),
-            bottomNavigationBar: AnimatedSlide(
-              offset: hideNav ? const Offset(0, 1.5) : Offset.zero,
+              BlocBuilder<WebViewCubit, WebViewState>(
+                buildWhen: (p, c) => p.isOffline != c.isOffline,
+                builder: (_, s) => s.isOffline ? OfflineScreen(onRetry: () => _c?.reload()) : const SizedBox.shrink(),
+              ),
+            ],
+          ),
+        ),
+        bottomNavigationBar: BlocBuilder<WebViewCubit, WebViewState>(
+          buildWhen: (p, c) => p.isDrawerOpen != c.isDrawerOpen || p.isNavBarVisible != c.isNavBarVisible || p.currentTab != c.currentTab || p.isModalOpen != c.isModalOpen || p.cartCount != c.cartCount || p.isArabic != c.isArabic,
+          builder: (_, s) {
+            final hide = isKeyboard || s.isModalOpen || s.isDrawerOpen || !s.isNavBarVisible;
+            return AnimatedSlide(
+              offset: hide ? const Offset(0, 1.5) : Offset.zero,
               duration: const Duration(milliseconds: 250),
               curve: Curves.easeInOut,
               child: AnimatedOpacity(
-                opacity: hideNav ? 0.0 : 1.0,
-                duration: const Duration(milliseconds: 200),
+                opacity: hide ? 0.0 : 1.0, duration: const Duration(milliseconds: 200),
                 child: IgnorePointer(
-                  ignoring: hideNav,
+                  ignoring: hide,
                   child: CustomBottomNav(
-                    selectedIndex: state.currentTab,
-                    onTabSelected: (i) {
-                      cubit.selectTab(i);
-                      VelinaWebViewSettings.handleTabAction(_controller, i, isArabic: state.isArabic);
-                    },
-                    isArabic: state.isArabic,
-                    cartCount: state.cartCount,
+                    selectedIndex: s.currentTab,
+                    onTabSelected: (i) { cubit.selectTab(i); VelinaWebViewSettings.handleTabAction(_c, i, isArabic: s.isArabic); },
+                    isArabic: s.isArabic, cartCount: s.cartCount,
                   ),
                 ),
               ),
-            ),
-          ),
-        );
-      },
+            );
+          },
+        ),
+      ),
     );
   }
 }
