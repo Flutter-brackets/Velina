@@ -4,8 +4,15 @@ import '../cubit/webview_cubit.dart';
 import '../cubit/webview_state.dart';
 
 /// Thin non-blocking top progress bar for seamless in-app navigation.
-class WebviewProgressBar extends StatelessWidget {
+class WebviewProgressBar extends StatefulWidget {
   const WebviewProgressBar({super.key});
+
+  @override
+  State<WebviewProgressBar> createState() => _WebviewProgressBarState();
+}
+
+class _WebviewProgressBarState extends State<WebviewProgressBar> {
+  bool _initialLoadFinished = false;
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +22,15 @@ class WebviewProgressBar extends StatelessWidget {
           p.progress != c.progress ||
           p.hasCompletedInitialLoad != c.hasCompletedInitialLoad,
       builder: (_, s) {
-        final show = s.hasCompletedInitialLoad && s.isPageLoading && s.progress < 0.70;
+        if (!_initialLoadFinished &&
+            s.hasCompletedInitialLoad &&
+            !s.isPageLoading) {
+          _initialLoadFinished = true;
+        }
+
+        final show =
+            _initialLoadFinished && s.isPageLoading && s.progress < 0.75;
+
         return Positioned(
           top: 0,
           left: 0,

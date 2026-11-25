@@ -21,7 +21,6 @@ class MainWebViewScreen extends StatelessWidget {
 
 class _MainWebViewContent extends StatefulWidget {
   const _MainWebViewContent();
-
   @override
   State<_MainWebViewContent> createState() => _MainWebViewContentState();
 }
@@ -30,16 +29,10 @@ class _MainWebViewContentState extends State<_MainWebViewContent> {
   InAppWebViewController? _c;
 
   @override
-  void initState() {
-    super.initState();
-    NotificationService.pendingUrl.addListener(_onPendingUrl);
-  }
+  void initState() { super.initState(); NotificationService.pendingUrl.addListener(_onPendingUrl); }
 
   @override
-  void dispose() {
-    NotificationService.pendingUrl.removeListener(_onPendingUrl);
-    super.dispose();
-  }
+  void dispose() { NotificationService.pendingUrl.removeListener(_onPendingUrl); super.dispose(); }
 
   void _onPendingUrl() {
     final u = NotificationService.pendingUrl.value;
@@ -67,7 +60,9 @@ class _MainWebViewContentState extends State<_MainWebViewContent> {
           bottom: false,
           child: Stack(
             children: [
-              WebViewViewport(key: const ValueKey('velina_stable_vp'), cubit: cubit, onCreated: (c) { _c = c; _onPendingUrl(); }),
+              RepaintBoundary(
+                child: WebViewViewport(key: const ValueKey('velina_stable_vp'), cubit: cubit, onCreated: (c) { _c = c; _onPendingUrl(); }),
+              ),
               const WebviewProgressBar(),
               BlocBuilder<WebViewCubit, WebViewState>(
                 buildWhen: (p, c) => p.showInitialLoader != c.showInitialLoader || p.hasCompletedInitialLoad != c.hasCompletedInitialLoad,
@@ -84,18 +79,20 @@ class _MainWebViewContentState extends State<_MainWebViewContent> {
           buildWhen: (p, c) => p.isDrawerOpen != c.isDrawerOpen || p.isNavBarVisible != c.isNavBarVisible || p.currentTab != c.currentTab || p.isModalOpen != c.isModalOpen || p.cartCount != c.cartCount || p.isArabic != c.isArabic,
           builder: (_, s) {
             final hide = isKeyboard || s.isModalOpen || s.isDrawerOpen || !s.isNavBarVisible;
-            return AnimatedSlide(
-              offset: hide ? const Offset(0, 1.5) : Offset.zero,
-              duration: const Duration(milliseconds: 250),
-              curve: Curves.easeInOut,
-              child: AnimatedOpacity(
-                opacity: hide ? 0.0 : 1.0, duration: const Duration(milliseconds: 200),
-                child: IgnorePointer(
-                  ignoring: hide,
-                  child: CustomBottomNav(
-                    selectedIndex: s.currentTab,
-                    onTabSelected: (i) { cubit.selectTab(i); VelinaWebViewSettings.handleTabAction(_c, i, isArabic: s.isArabic); },
-                    isArabic: s.isArabic, cartCount: s.cartCount,
+            return RepaintBoundary(
+              child: AnimatedSlide(
+                offset: hide ? const Offset(0, 1.5) : Offset.zero,
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeInOut,
+                child: AnimatedOpacity(
+                  opacity: hide ? 0.0 : 1.0, duration: const Duration(milliseconds: 200),
+                  child: IgnorePointer(
+                    ignoring: hide,
+                    child: CustomBottomNav(
+                      selectedIndex: s.currentTab,
+                      onTabSelected: (i) { cubit.selectTab(i); VelinaWebViewSettings.handleTabAction(_c, i, isArabic: s.isArabic); },
+                      isArabic: s.isArabic, cartCount: s.cartCount,
+                    ),
                   ),
                 ),
               ),

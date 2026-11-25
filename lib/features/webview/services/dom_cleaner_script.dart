@@ -4,7 +4,8 @@ import 'dom_cleaner_css.dart';
 class DomCleanerScript {
   const DomCleanerScript._();
 
-  static final String script = '''
+  static final String script =
+      '''
 (function() {
   try {
   function injectSafeStyle() {
@@ -78,14 +79,15 @@ class DomCleanerScript {
     var isOpen = isAnyOverlayOpen(); updateButtons(isOpen);
     if (isOpen !== lastState) { lastState = isOpen; if (window.flutter_inappwebview && window.flutter_inappwebview.callHandler) window.flutter_inappwebview.callHandler('onModalState', isOpen); }
   }
-  function scheduleUpdate() { if (window._vTouch || window._vScroll) return; if (updateTimer) clearTimeout(updateTimer); updateTimer = setTimeout(updateOverlay, 150); }
+  function scheduleUpdate() { if (window._vTouch || window._vScroll) return; if (updateTimer) clearTimeout(updateTimer); updateTimer = setTimeout(updateOverlay, 200); }
+  window._velinaForceSync = updateOverlay;
   if (!window._velinaWatcher) {
     window._velinaWatcher = true;
     window.addEventListener('touchstart', function() { window._vTouch = true; }, { passive: true });
-    window.addEventListener('touchend', function() { window._vTouch = false; scheduleUpdate(); }, { passive: true });
+    window.addEventListener('touchend', function() { window._vTouch = false; if (window.location.pathname.indexOf('/cart') !== -1) scheduleUpdate(); }, { passive: true });
     window.addEventListener('touchcancel', function() { window._vTouch = false; }, { passive: true });
-    window.addEventListener('scroll', function() { window._vScroll = true; clearTimeout(window._vScrollTimer); window._vScrollTimer = setTimeout(function() { window._vScroll = false; scheduleUpdate(); }, 180); }, { passive: true });
-    document.addEventListener('DOMContentLoaded', updateOverlay);
+    window.addEventListener('scroll', function() { window._vScroll = true; clearTimeout(window._vScrollTimer); window._vScrollTimer = setTimeout(function() { window._vScroll = false; if (window.location.pathname.indexOf('/cart') !== -1) scheduleUpdate(); }, 150); }, { passive: true });
+    document.addEventListener('DOMContentLoaded', updateOverlay); window.addEventListener('load', updateOverlay);
     document.addEventListener('click', function(e) {
       var t = e.target; if (t && t.closest && (t.closest('.swiper') || t.closest('salla-slider') || t.closest('[class*="slider"]'))) return;
       setTimeout(updateOverlay, 30); setTimeout(scheduleUpdate, 200);

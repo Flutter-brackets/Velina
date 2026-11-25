@@ -10,19 +10,24 @@ class VelinaWebViewSettings {
     javaScriptEnabled: true,
     cacheEnabled: true,
     incognito: false,
+    cacheMode: CacheMode.LOAD_DEFAULT,
+    domStorageEnabled: true,
+    databaseEnabled: true,
     sharedCookiesEnabled: true,
+    thirdPartyCookiesEnabled: true,
+    hardwareAcceleration: true,
+    offscreenPreRaster: true,
+    rendererPriorityPolicy: RendererPriorityPolicy(
+      rendererRequestedPriority: RendererPriority.RENDERER_PRIORITY_IMPORTANT,
+      waivedWhenNotVisible: false,
+    ),
+    decelerationRate: ScrollViewDecelerationRate.NORMAL,
     allowsBackForwardNavigationGestures: true,
     disableHorizontalScroll: false,
     disableVerticalScroll: false,
-    decelerationRate: ScrollViewDecelerationRate.NORMAL,
     allowsInlineMediaPlayback: true,
-    domStorageEnabled: true,
-    databaseEnabled: true,
-    useHybridComposition: true,
-    mediaPlaybackRequiresUserGesture: false,
     transparentBackground: true,
     supportZoom: false,
-    thirdPartyCookiesEnabled: true,
     javaScriptCanOpenWindowsAutomatically: true,
     mixedContentMode: MixedContentMode.MIXED_CONTENT_ALWAYS_ALLOW,
     isInspectable: kDebugMode,
@@ -35,15 +40,34 @@ class VelinaWebViewSettings {
   }) async {
     if (controller == null) return;
     final lang = isArabic ? 'ar' : 'en';
-    if (index == 0 || index == 1) {
-      final target = index == 0 ? 'https://velinaboutiquesa.com/$lang' : 'https://velinaboutiquesa.com/$lang/cart';
+    if (index == 0) {
+      final target = 'https://velinaboutiquesa.com/$lang';
       final cur = (await controller.getUrl())?.toString().toLowerCase().replaceAll(RegExp(r'/+$'), '') ?? '';
       final tgt = target.toLowerCase().replaceAll(RegExp(r'/+$'), '');
-      if (cur == tgt || (index == 0 && (cur == 'https://velinaboutiquesa.com' || cur == 'https://velinaboutiquesa.com/$lang'))) {
+      if (cur == tgt || cur == 'https://velinaboutiquesa.com' || cur == 'https://velinaboutiquesa.com/$lang') {
+        await controller.evaluateJavascript(source: "window.scrollTo({ top: 0, behavior: 'smooth' });");
+        return;
+      }
+      final history = await controller.getCopyBackForwardList();
+      final list = history?.list;
+      final currentIdx = history?.currentIndex;
+      if (list != null && currentIdx != null) {
+        for (int i = currentIdx - 1; i >= 0; i--) {
+          final u = list[i].url?.toString().toLowerCase().replaceAll(RegExp(r'/+$'), '') ?? '';
+          if (u == 'https://velinaboutiquesa.com' || u == 'https://velinaboutiquesa.com/$lang' || u == tgt) {
+            await controller.goBackOrForward(steps: i - currentIdx);
+            return;
+          }
+        }
+      }
+      await controller.loadUrl(urlRequest: URLRequest(url: WebUri(target), cachePolicy: URLRequestCachePolicy.USE_PROTOCOL_CACHE_POLICY));
+    } else if (index == 1) {
+      final cur = (await controller.getUrl())?.toString().toLowerCase() ?? '';
+      if (cur.contains('/cart')) {
         await controller.evaluateJavascript(source: "window.scrollTo({ top: 0, behavior: 'smooth' });");
       } else {
         await controller.loadUrl(
-          urlRequest: URLRequest(url: WebUri(target), cachePolicy: URLRequestCachePolicy.USE_PROTOCOL_CACHE_POLICY),
+          urlRequest: URLRequest(url: WebUri('https://velinaboutiquesa.com/$lang/cart'), cachePolicy: URLRequestCachePolicy.USE_PROTOCOL_CACHE_POLICY),
         );
       }
     } else if (index == 2) {
