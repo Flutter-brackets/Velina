@@ -9,9 +9,10 @@ class WebviewScripts {
   static String get safeScript => DomCleanerScript.script;
 
   static const String earlyHideCss =
-      '#mobile-nav, .mobile-nav-inner, .mobile-nav-outer, .s-bottom-nav, salla-bottom-nav, salla-chat-widget, .salla-chat-widget, #wa-widget-send-button { display: none !important; height: 0 !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important; }';
+      '#mobile-nav, .mobile-nav-inner, .mobile-nav-outer, .s-bottom-nav, salla-bottom-nav, salla-chat-widget, .salla-chat-widget, #wa-widget-send-button, [id*="moatmt"], [class*="moatmt"], [id*="widget-host"], [class*="widget-host"], moatmt-widget-host, #moatmt_chat_widget, #moatmt-widget-send-button, .moatmt-chat-box { display: none !important; height: 0 !important; width: 0 !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important; }';
 
-  static const String earlyHideScript = '''
+  static const String earlyHideScript =
+      '''
 (function() {
   try {
     var doc = document.documentElement || document.head;

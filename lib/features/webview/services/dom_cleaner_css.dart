@@ -18,7 +18,9 @@ class DomCleanerCss {
       display: none !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important; width: 0 !important; height: 0 !important;
     }
     .mm-wrapper__blocker, .mm-ocd__backdrop { pointer-events: auto !important; }
-    salla-chat-widget, .salla-chat-widget, #wa-widget-send-button {
+    salla-chat-widget, .salla-chat-widget, #wa-widget-send-button,
+    [id*="moatmt"], [class*="moatmt"], [id*="widget-host"], [class*="widget-host"],
+    moatmt-widget-host, #moatmt_chat_widget, #moatmt-widget-send-button, .moatmt-chat-box {
       display: none !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important; width: 0 !important; height: 0 !important;
     }
     html.mm-wrapper_opened #scroll-top, html.mm-wrapper--opened #scroll-top,

@@ -12,6 +12,31 @@ class DomCleanerScript {
     var root = document.head || document.documentElement; if (!root || document.getElementById('velina-clean-style')) return;
     var s = document.createElement('style'); s.id = 'velina-clean-style'; s.textContent = `${DomCleanerCss.css}`; root.appendChild(s);
   }
+  function hideNode(el) {
+    if (!el || !el.style) return;
+    el.style.setProperty('display', 'none', 'important');
+    el.style.setProperty('visibility', 'hidden', 'important');
+    el.style.setProperty('opacity', '0', 'important');
+    el.style.setProperty('pointer-events', 'none', 'important');
+    el.style.setProperty('width', '0', 'important');
+    el.style.setProperty('height', '0', 'important');
+  }
+  function isMoatmtWidget(el) {
+    if (!el || el.nodeType !== 1) return false;
+    var tag = (el.tagName || '').toLowerCase();
+    var id = (el.id || '').toLowerCase();
+    var cls = typeof el.className === 'string' ? el.className.toLowerCase() : '';
+    if (tag === 'main' || tag === 'header' || tag === 'footer' || id === 'app' || (el.querySelector && el.querySelector('main, #app, header, footer'))) return false;
+    if (tag.indexOf('widget-host') !== -1 || id.indexOf('widget-host') !== -1 || cls.indexOf('widget-host') !== -1 || tag.indexOf('moatmt') !== -1 || id.indexOf('moatmt') !== -1 || cls.indexOf('moatmt') !== -1) return true;
+    return !!(el.shadowRoot && el.shadowRoot.querySelector('#moatmt_chat_widget, #moatmt-widget-send-button, .moatmt-chat-box'));
+  }
+  function killMoatmtHost(el) {
+    hideNode(el);
+    if (el && el.shadowRoot) {
+      var inner = el.shadowRoot.querySelectorAll('#moatmt_chat_widget, #moatmt-widget-send-button, .moatmt-chat-box');
+      for (var s = 0; s < inner.length; s++) hideNode(inner[s]);
+    }
+  }
   function isDrawerOpen() {
     var d = document.documentElement, b = document.body;
     return d.classList.contains('mm-wrapper_opened') || d.classList.contains('mm-wrapper--opened') || d.classList.contains('mm-ocd--open') || (b && (b.classList.contains('mm-ocd--open') || b.classList.contains('s-drawer-open'))) || !!document.querySelector('.mm-menu_opened, .mm-menu--opened, .mm-ocd--open, salla-mobile-menu[open], #mobile-menu.mm-menu_opened');
@@ -42,10 +67,11 @@ class DomCleanerScript {
     return !!document.querySelector('salla-login-modal[open], salla-login-modal[is-open], salla-modal[open], salla-modal[is-open], salla-search.is-open, salla-search[open], [role="dialog"][open], [role="dialog"].is-open, .s-modal.is-open');
   }
   function hideFloatingWhatsApp() {
-    var list = document.querySelectorAll('salla-chat-widget, .salla-chat-widget, #wa-widget-send-button');
-    for (var i = 0; i < list.length; i++) {
-      list[i].style.setProperty('display', 'none', 'important'); list[i].style.setProperty('visibility', 'hidden', 'important');
-      list[i].style.setProperty('opacity', '0', 'important'); list[i].style.setProperty('pointer-events', 'none', 'important');
+    var list = document.querySelectorAll('salla-chat-widget, .salla-chat-widget, #wa-widget-send-button, [id*="moatmt"], [class*="moatmt"], [id*="widget-host"], [class*="widget-host"], moatmt-widget-host, #moatmt_chat_widget, #moatmt-widget-send-button, .moatmt-chat-box');
+    for (var i = 0; i < list.length; i++) killMoatmtHost(list[i]);
+    var kids = document.body ? document.body.children : [];
+    for (var k = 0; k < kids.length; k++) {
+      if (isMoatmtWidget(kids[k])) killMoatmtHost(kids[k]);
     }
     var wa = document.querySelectorAll('a[href*="wa.me"], a[href*="whatsapp"]');
     for (var j = 0; j < wa.length; j++) {
@@ -57,13 +83,24 @@ class DomCleanerScript {
         if (window.getComputedStyle(cur).position === 'fixed') {
           var r = cur.getBoundingClientRect();
           if (r.width > 0 && r.width <= 320 && r.height > 0 && r.height <= 160 && !cur.querySelector('main, header, footer, #app')) {
-            cur.style.setProperty('display', 'none', 'important'); cur.style.setProperty('visibility', 'hidden', 'important');
-            cur.style.setProperty('opacity', '0', 'important'); cur.style.setProperty('pointer-events', 'none', 'important'); break;
+            hideNode(cur); break;
           }
         }
         cur = cur.parentElement;
       }
     }
+  }
+  function watchBodyForMoatmt() {
+    if (window._velinaMoatmtObs || !document.body) return;
+    window._velinaMoatmtObs = true;
+    new MutationObserver(function(muts) {
+      for (var m = 0; m < muts.length; m++) {
+        var added = muts[m].addedNodes;
+        for (var a = 0; a < added.length; a++) {
+          if (isMoatmtWidget(added[a])) killMoatmtHost(added[a]);
+        }
+      }
+    }).observe(document.body, { childList: true });
   }
   function updateButtons(isOpen) {
     var inCart = window.location.pathname.indexOf('/cart') !== -1 || window.location.pathname.indexOf('/checkout') !== -1;
@@ -75,7 +112,7 @@ class DomCleanerScript {
   var lastState = null, updateTimer = null;
   function updateOverlay() {
     if (window._vTouch || window._vScroll) return;
-    injectSafeStyle(); checkDrawer(); updateCartH(); liftCartSummary();
+    injectSafeStyle(); watchBodyForMoatmt(); checkDrawer(); updateCartH(); liftCartSummary();
     var isOpen = isAnyOverlayOpen(); updateButtons(isOpen);
     if (isOpen !== lastState) { lastState = isOpen; if (window.flutter_inappwebview && window.flutter_inappwebview.callHandler) window.flutter_inappwebview.callHandler('onModalState', isOpen); }
   }
@@ -83,11 +120,14 @@ class DomCleanerScript {
   window._velinaForceSync = updateOverlay;
   if (!window._velinaWatcher) {
     window._velinaWatcher = true;
+    watchBodyForMoatmt();
     window.addEventListener('touchstart', function() { window._vTouch = true; }, { passive: true });
     window.addEventListener('touchend', function() { window._vTouch = false; if (window.location.pathname.indexOf('/cart') !== -1) scheduleUpdate(); }, { passive: true });
     window.addEventListener('touchcancel', function() { window._vTouch = false; }, { passive: true });
     window.addEventListener('scroll', function() { window._vScroll = true; clearTimeout(window._vScrollTimer); window._vScrollTimer = setTimeout(function() { window._vScroll = false; if (window.location.pathname.indexOf('/cart') !== -1) scheduleUpdate(); }, 150); }, { passive: true });
     document.addEventListener('DOMContentLoaded', updateOverlay); window.addEventListener('load', updateOverlay);
+    setTimeout(hideFloatingWhatsApp, 1000);
+    setTimeout(hideFloatingWhatsApp, 3000);
     document.addEventListener('click', function(e) {
       var t = e.target; if (t && t.closest && (t.closest('.swiper') || t.closest('salla-slider') || t.closest('[class*="slider"]'))) return;
       setTimeout(updateOverlay, 30); setTimeout(scheduleUpdate, 200);
