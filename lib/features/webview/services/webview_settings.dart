@@ -16,7 +16,7 @@ class VelinaWebViewSettings {
     sharedCookiesEnabled: true,
     thirdPartyCookiesEnabled: true,
     hardwareAcceleration: true,
-    offscreenPreRaster: true,
+    offscreenPreRaster: false,
     rendererPriorityPolicy: RendererPriorityPolicy(
       rendererRequestedPriority: RendererPriority.RENDERER_PRIORITY_IMPORTANT,
       waivedWhenNotVisible: false,
@@ -26,7 +26,7 @@ class VelinaWebViewSettings {
     disableHorizontalScroll: false,
     disableVerticalScroll: false,
     allowsInlineMediaPlayback: true,
-    transparentBackground: true,
+    transparentBackground: false,
     supportZoom: false,
     javaScriptCanOpenWindowsAutomatically: true,
     mixedContentMode: MixedContentMode.MIXED_CONTENT_ALWAYS_ALLOW,

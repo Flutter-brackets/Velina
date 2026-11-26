@@ -145,7 +145,7 @@ class DomCleanerScript {
       }
     }).observe(document.body, { childList: true });
   }
-  function updateButtons(isOpen) {
+  function updateButtons() {
     var p = (window.location.pathname || '').toLowerCase();
     var inCart = p.indexOf('/cart') !== -1 || p.indexOf('/checkout') !== -1;
     if (document.documentElement) {
@@ -173,13 +173,12 @@ class DomCleanerScript {
         st.style.setProperty('transform-origin', 'bottom right', 'important');
       }
     }
-    hideFloatingWhatsApp();
   }
   var lastState = null, updateTimer = null;
   function updateOverlay(forceSync) {
     if (!forceSync && (window._vTouch || window._vScroll)) return;
     injectSafeStyle(); watchBodyForMoatmt(); checkDrawer(); updateCartH(); liftCartSummary();
-    var isOpen = isAnyOverlayOpen(); updateButtons(isOpen);
+    var isOpen = isAnyOverlayOpen(); updateButtons();
     if (forceSync || isOpen !== lastState) {
       lastState = isOpen;
       if (window.flutter_inappwebview && window.flutter_inappwebview.callHandler) {
@@ -190,17 +189,18 @@ class DomCleanerScript {
   function scheduleUpdate(forceSync) {
     if (!forceSync && (window._vTouch || window._vScroll)) return;
     if (updateTimer) clearTimeout(updateTimer);
-    updateTimer = setTimeout(function() { updateOverlay(!!forceSync); }, 200);
+    updateTimer = setTimeout(function() { updateOverlay(!!forceSync); }, 220);
   }
   window._velinaForceSync = function(force) { updateOverlay(force !== false); };
   if (!window._velinaWatcher) {
     window._velinaWatcher = true;
     watchBodyForMoatmt();
+    hideFloatingWhatsApp();
     window.addEventListener('touchstart', function() { window._vTouch = true; }, { passive: true });
     window.addEventListener('touchend', function() {
       window._vTouch = false;
       if (window.location.pathname.indexOf('/cart') !== -1) scheduleUpdate(false);
-      setTimeout(function() { updateOverlay(true); }, 380);
+      if (lastState === true) setTimeout(function() { updateOverlay(true); }, 380);
     }, { passive: true });
     window.addEventListener('touchcancel', function() { window._vTouch = false; }, { passive: true });
     window.addEventListener('scroll', function() {
@@ -212,8 +212,8 @@ class DomCleanerScript {
         if (lastState === true) updateOverlay(true);
       }, 150);
     }, { passive: true });
-    document.addEventListener('DOMContentLoaded', function() { updateOverlay(true); });
-    window.addEventListener('load', function() { updateOverlay(true); });
+    document.addEventListener('DOMContentLoaded', function() { hideFloatingWhatsApp(); updateOverlay(true); });
+    window.addEventListener('load', function() { hideFloatingWhatsApp(); updateOverlay(true); });
     setTimeout(hideFloatingWhatsApp, 1000);
     setTimeout(hideFloatingWhatsApp, 3000);
     document.addEventListener('click', function(e) {
@@ -229,7 +229,7 @@ class DomCleanerScript {
         if (el && el.closest && el.closest('.swiper, salla-slider, [class*="slider"], [class*="carousel"], form, .product-form, salla-add-product-button, salla-quick-buy, .sticky-product-bar')) continue;
         scheduleUpdate(false); break;
       }
-    }).observe(document.documentElement, { attributeFilter: ['class', 'open', 'is-open', 'style', 'aria-hidden'], attributes: true, childList: true, subtree: true });
+    }).observe(document.documentElement, { attributeFilter: ['class', 'open', 'is-open', 'aria-hidden'], attributes: true, childList: true, subtree: true });
   }
   updateOverlay(true);
   } catch(e) {}

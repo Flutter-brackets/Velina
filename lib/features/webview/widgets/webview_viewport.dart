@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import '../../../core/constants/app_urls.dart';
@@ -12,6 +14,13 @@ class WebViewViewport extends StatelessWidget {
   final WebViewCubit cubit;
   final ValueChanged<InAppWebViewController> onCreated;
 
+  static final Set<Factory<OneSequenceGestureRecognizer>> _gestureRecognizers =
+      <Factory<OneSequenceGestureRecognizer>>{
+        Factory<HorizontalDragGestureRecognizer>(
+          () => HorizontalDragGestureRecognizer(),
+        ),
+      };
+
   const WebViewViewport({
     super.key,
     required this.cubit,
@@ -23,45 +32,54 @@ class WebViewViewport extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InAppWebView(
-      initialUrlRequest: URLRequest(
-        url: WebUri(AppUrls.baseUrl),
-        cachePolicy: URLRequestCachePolicy.USE_PROTOCOL_CACHE_POLICY,
+    return RepaintBoundary(
+      child: InAppWebView(
+        initialUrlRequest: URLRequest(
+          url: WebUri(AppUrls.baseUrl),
+          cachePolicy: URLRequestCachePolicy.USE_PROTOCOL_CACHE_POLICY,
+        ),
+        initialSettings: VelinaWebViewSettings.settings,
+        initialUserScripts: WebviewScripts.initialUserScripts,
+        gestureRecognizers: _gestureRecognizers,
+        onWebViewCreated: (c) {
+          onCreated(c);
+          c.addJavaScriptHandler(
+            handlerName: 'onModalState',
+            callback: (a) => cubit.setModalOpen(a.isNotEmpty && a[0] == true),
+          );
+          c.addJavaScriptHandler(
+            handlerName: 'onDrawerStateChanged',
+            callback: (a) => cubit.setDrawerOpen(a.isNotEmpty && a[0] == true),
+          );
+          c.addJavaScriptHandler(
+            handlerName: 'onCartCount',
+            callback: (a) => a.isNotEmpty && a[0] is num
+                ? cubit.updateCartCount((a[0] as num).toInt())
+                : null,
+          );
+        },
+        shouldOverrideUrlLoading: (_, act) async {
+          final u = act.request.url;
+          if (act.isForMainFrame &&
+              u != null &&
+              u.host.contains('velinaboutiquesa.com') &&
+              u.fragment.isEmpty) {
+            cubit.triggerTransitionLoader();
+          }
+          return UrlHandlerService.handleUrl(act);
+        },
+        onLoadStart: (_, uri) => cubit.onPageStarted(uri),
+        onProgressChanged: (c, p) => cubit.onProgressChanged(p),
+        onPageCommitVisible: (c, uri) => cubit.onPageCommitVisible(uri),
+        onLoadStop: (c, uri) {
+          _inject(c);
+          cubit.onPageLoaded(uri);
+          VelinaWebViewSettings.syncStoreMeta(c, cubit.updateStoreMeta);
+        },
+        onUpdateVisitedHistory: (_, u, r) =>
+            (r != true) ? cubit.syncTabWithUrl(u) : null,
+        onScrollChanged: (_, x, y) => cubit.updateScroll(y),
       ),
-      initialSettings: VelinaWebViewSettings.settings,
-      initialUserScripts: WebviewScripts.initialUserScripts,
-      onWebViewCreated: (c) {
-        onCreated(c);
-        c.addJavaScriptHandler(
-          handlerName: 'onModalState',
-          callback: (a) => cubit.setModalOpen(a.isNotEmpty && a[0] == true),
-        );
-        c.addJavaScriptHandler(
-          handlerName: 'onDrawerStateChanged',
-          callback: (a) => cubit.setDrawerOpen(a.isNotEmpty && a[0] == true),
-        );
-        c.addJavaScriptHandler(
-          handlerName: 'onCartCount',
-          callback: (a) => a.isNotEmpty && a[0] is num ? cubit.updateCartCount((a[0] as num).toInt()) : null,
-        );
-      },
-      shouldOverrideUrlLoading: (_, act) async {
-        final u = act.request.url;
-        if (act.isForMainFrame && u != null && u.host.contains('velinaboutiquesa.com') && u.fragment.isEmpty) {
-          cubit.triggerTransitionLoader();
-        }
-        return UrlHandlerService.handleUrl(act);
-      },
-      onLoadStart: (_, uri) => cubit.onPageStarted(uri),
-      onProgressChanged: (c, p) => cubit.onProgressChanged(p),
-      onPageCommitVisible: (c, uri) => cubit.onPageCommitVisible(uri),
-      onLoadStop: (c, uri) {
-        _inject(c);
-        cubit.onPageLoaded(uri);
-        VelinaWebViewSettings.syncStoreMeta(c, cubit.updateStoreMeta);
-      },
-      onUpdateVisitedHistory: (_, u, r) => (r != true) ? cubit.syncTabWithUrl(u) : null,
-      onScrollChanged: (_, x, y) => cubit.updateScroll(y),
     );
   }
 }
