@@ -24,17 +24,25 @@ class DomCleanerCss {
       display: none !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important; width: 0 !important; height: 0 !important;
     }
     html.mm-wrapper_opened #scroll-top, html.mm-wrapper--opened #scroll-top,
-    html.mm-wrapper_opened .scroll-top, html.mm-wrapper--opened .scroll-top {
+    html.mm-wrapper_opened .scroll-top, html.mm-wrapper--opened .scroll-top,
+    html.mm-wrapper_opened .progress-wrap, html.mm-wrapper--opened .progress-wrap {
       display: none !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important;
     }
     button.scroll-top, #scroll-top, .btn-scroll-top, [class*="scroll-top"], .progress-wrap, [class*="progress-wrap"], [aria-label*="top"], [aria-label*="أعلى"] {
       bottom: 88px !important; right: 14px !important;
       transform: scale(0.76) !important; transform-origin: bottom right !important; z-index: 24 !important;
     }
-    body[class*="cart"] button.scroll-top, body[class*="cart"] #scroll-top,
-    body[class*="cart"] [class*="scroll-top"], body[class*="cart"] .progress-wrap,
-    .cart-page button.scroll-top, .cart-page #scroll-top, .cart-page [class*="scroll-top"] {
-      bottom: calc(var(--velina-cart-footer-h, 165px) + 14px) !important;
+    html.velina-in-cart button.scroll-top, html.velina-in-cart #scroll-top, html.velina-in-cart .scroll-top,
+    html.velina-in-cart .btn-scroll-top, html.velina-in-cart [id*="scroll-top"], html.velina-in-cart [class*="scroll-top"],
+    html.velina-in-cart [id*="scroll-to-top"], html.velina-in-cart [class*="scroll-to-top"],
+    html.velina-in-cart #back-to-top, html.velina-in-cart .back-to-top, html.velina-in-cart [id*="back-to-top"],
+    html.velina-in-cart [class*="back-to-top"], html.velina-in-cart [data-back-to-top],
+    html.velina-in-cart .progress-wrap, html.velina-in-cart [class*="progress-wrap"],
+    html.velina-in-cart button[aria-label*="top"], html.velina-in-cart a[aria-label*="top"],
+    html.velina-in-cart button[aria-label*="أعلى"], html.velina-in-cart a[aria-label*="أعلى"],
+    .cart-page button.scroll-top, .cart-page #scroll-top, .cart-page .scroll-top,
+    .cart-page [class*="scroll-top"], .cart-page .progress-wrap, .cart-page [class*="progress-wrap"] {
+      display: none !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important; width: 0 !important; height: 0 !important;
     }
     body[class*="cart"] .cart-submit-wrap, body[class*="cart"] [class*="cart-summary-sticky"],
     body[class*="cart"] [class*="sticky-cart"], body[class*="cart"] [class*="cart-total"],

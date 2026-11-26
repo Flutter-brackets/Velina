@@ -21,6 +21,16 @@ class DomCleanerScript {
     el.style.setProperty('width', '0', 'important');
     el.style.setProperty('height', '0', 'important');
   }
+  function restoreHiddenScrollBtn(el) {
+    if (!el || !el.style) return;
+    el.removeAttribute('data-velina-hidden');
+    el.style.removeProperty('display');
+    el.style.removeProperty('visibility');
+    el.style.removeProperty('opacity');
+    el.style.removeProperty('pointer-events');
+    el.style.removeProperty('width');
+    el.style.removeProperty('height');
+  }
   function isMoatmtWidget(el) {
     if (!el || el.nodeType !== 1) return false;
     var tag = (el.tagName || '').toLowerCase();
@@ -122,6 +132,7 @@ class DomCleanerScript {
       }
     }
   }
+  var scrollTopSel = 'button.scroll-top, #scroll-top, .scroll-top, .btn-scroll-top, [id*="scroll-top"], [class*="scroll-top"], [id*="scroll-to-top"], [class*="scroll-to-top"], #back-to-top, .back-to-top, [id*="back-to-top"], [class*="back-to-top"], [data-back-to-top], .progress-wrap, [class*="progress-wrap"], button[aria-label*="top"], a[aria-label*="top"], button[aria-label*="أعلى"], a[aria-label*="أعلى"]';
   function watchBodyForMoatmt() {
     if (window._velinaMoatmtObs || !document.body) return;
     window._velinaMoatmtObs = true;
@@ -135,10 +146,33 @@ class DomCleanerScript {
     }).observe(document.body, { childList: true });
   }
   function updateButtons(isOpen) {
-    var inCart = window.location.pathname.indexOf('/cart') !== -1 || window.location.pathname.indexOf('/checkout') !== -1;
-    var st = window._vSt && window._vSt.isConnected ? window._vSt : null;
-    if (!st) { st = document.querySelector('button.scroll-top, #scroll-top, .btn-scroll-top, [class*="scroll-top"], .progress-wrap'); if (st) window._vSt = st; }
-    if (st) { st.style.setProperty('bottom', inCart ? 'calc(var(--velina-cart-footer-h, 165px) + 14px)' : '88px', 'important'); st.style.setProperty('transform', 'scale(0.76)', 'important'); st.style.setProperty('transform-origin', 'bottom right', 'important'); }
+    var p = (window.location.pathname || '').toLowerCase();
+    var inCart = p.indexOf('/cart') !== -1 || p.indexOf('/checkout') !== -1;
+    if (document.documentElement) {
+      document.documentElement.classList.toggle('velina-in-cart', inCart);
+    }
+    if (inCart) {
+      var btns = document.querySelectorAll(scrollTopSel);
+      for (var i = 0; i < btns.length; i++) {
+        btns[i].setAttribute('data-velina-hidden', '1');
+        hideNode(btns[i]);
+      }
+    } else {
+      var cs = document.getElementById('velina-cart-scroll-hide');
+      if (cs && cs.parentNode) cs.parentNode.removeChild(cs);
+      var hidden = document.querySelectorAll('[data-velina-hidden="1"]');
+      for (var h = 0; h < hidden.length; h++) restoreHiddenScrollBtn(hidden[h]);
+      var st = window._vSt && window._vSt.isConnected ? window._vSt : null;
+      if (!st) {
+        st = document.querySelector('button.scroll-top, #scroll-top, .btn-scroll-top, [class*="scroll-top"], .progress-wrap');
+        if (st) window._vSt = st;
+      }
+      if (st) {
+        st.style.setProperty('bottom', '88px', 'important');
+        st.style.setProperty('transform', 'scale(0.76)', 'important');
+        st.style.setProperty('transform-origin', 'bottom right', 'important');
+      }
+    }
     hideFloatingWhatsApp();
   }
   var lastState = null, updateTimer = null;

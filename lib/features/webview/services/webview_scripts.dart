@@ -11,6 +11,9 @@ class WebviewScripts {
   static const String earlyHideCss =
       '#mobile-nav, .mobile-nav-inner, .mobile-nav-outer, .s-bottom-nav, salla-bottom-nav, salla-chat-widget, .salla-chat-widget, #wa-widget-send-button, [id*="moatmt"], [class*="moatmt"], [id*="widget-host"], [class*="widget-host"], moatmt-widget-host, #moatmt_chat_widget, #moatmt-widget-send-button, .moatmt-chat-box { display: none !important; height: 0 !important; width: 0 !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important; }';
 
+  static const String earlyCartScrollHideCss =
+      'button.scroll-top, #scroll-top, .scroll-top, .btn-scroll-top, [id*="scroll-top"], [class*="scroll-top"], [id*="scroll-to-top"], [class*="scroll-to-top"], #back-to-top, .back-to-top, [id*="back-to-top"], [class*="back-to-top"], [data-back-to-top], .progress-wrap, [class*="progress-wrap"], button[aria-label*="top"], a[aria-label*="top"], button[aria-label*="أعلى"], a[aria-label*="أعلى"] { display: none !important; height: 0 !important; width: 0 !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important; }';
+
   static const String earlyHideScript =
       '''
 (function() {
@@ -21,6 +24,17 @@ class WebviewScripts {
       s.id = 'velina-early-hide';
       s.textContent = '$earlyHideCss';
       doc.appendChild(s);
+    }
+    var p = (window.location.pathname || '').toLowerCase();
+    var inCart = p.indexOf('/cart') !== -1 || p.indexOf('/checkout') !== -1;
+    if (inCart && doc) {
+      if (document.documentElement) document.documentElement.classList.add('velina-in-cart');
+      if (!document.getElementById('velina-cart-scroll-hide')) {
+        var cs = document.createElement('style');
+        cs.id = 'velina-cart-scroll-hide';
+        cs.textContent = '$earlyCartScrollHideCss';
+        doc.appendChild(cs);
+      }
     }
   } catch (e) {}
 })();
