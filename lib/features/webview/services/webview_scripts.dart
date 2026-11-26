@@ -42,23 +42,39 @@ class WebviewScripts {
 
   static const String loginTriggerJs = '''
 (function() {
-  if (window.salla && salla.event && typeof salla.event.dispatch === 'function') salla.event.dispatch('login::open');
-  var m = document.querySelector('salla-login-modal');
-  if (m) { if (typeof m.open === 'function') m.open(); m.setAttribute('open', ''); return; }
-  var btn = document.querySelector('[onclick*="login"], [data-modal="login"], button[aria-label*="دخول"], a[href*="/login"], salla-user-menu button');
-  if (btn) btn.click();
+  try {
+    if (window.salla && salla.event && typeof salla.event.dispatch === 'function') {
+      salla.event.dispatch('login::open');
+    } else {
+      var m = document.querySelector('salla-login-modal');
+      if (m && typeof m.open === 'function') {
+        m.open();
+      } else {
+        var btn = document.querySelector('[onclick*="login"], [data-modal="login"], button[aria-label*="دخول"], a[href*="/login"], salla-user-menu button');
+        if (btn) btn.click();
+      }
+    }
+    setTimeout(function() { if (window._velinaForceSync) window._velinaForceSync(true); }, 450);
+  } catch (e) {}
 })();
 ''';
 
   static const String searchTriggerJs = '''
 (function() {
-  if (window.salla && salla.event && typeof salla.event.dispatch === 'function') {
-    try { salla.event.dispatch('search::open'); return; } catch(e) {}
-  }
-  var s = document.querySelector('salla-search');
-  if (s && typeof s.open === 'function') { try { s.open(); return; } catch(e) {} }
-  var btn = document.querySelector('.header-btn--search, .mob-srch button, .mob-srch a, [data-salla-search]');
-  if (btn) btn.click();
+  try {
+    if (window.salla && salla.event && typeof salla.event.dispatch === 'function') {
+      salla.event.dispatch('search::open');
+    } else {
+      var s = document.querySelector('salla-search');
+      if (s && typeof s.open === 'function') {
+        s.open();
+      } else {
+        var btn = document.querySelector('.header-btn--search, .mob-srch button, .mob-srch a, [data-salla-search]');
+        if (btn) btn.click();
+      }
+    }
+    setTimeout(function() { if (window._velinaForceSync) window._velinaForceSync(true); }, 450);
+  } catch (e) {}
 })();
 ''';
 }

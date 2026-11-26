@@ -96,12 +96,23 @@ class WebViewCubit extends Cubit<WebViewState> {
 
   void setModalOpen(bool open) {
     int tab = state.currentTab;
+    bool navVisible = state.isNavBarVisible;
     if (!open) {
       final p = _lastKnownUri?.path.toLowerCase() ?? '';
       tab = p.contains('/cart') ? 1 : 0;
+      navVisible = true;
     }
-    if (open != state.isModalOpen || tab != state.currentTab)
-      emit(state.copyWith(isModalOpen: open, currentTab: tab));
+    if (open != state.isModalOpen ||
+        tab != state.currentTab ||
+        navVisible != state.isNavBarVisible) {
+      emit(
+        state.copyWith(
+          isModalOpen: open,
+          currentTab: tab,
+          isNavBarVisible: navVisible,
+        ),
+      );
+    }
   }
 
   void onPageStarted(WebUri? uri) {

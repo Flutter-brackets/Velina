@@ -49,6 +49,42 @@ class DomCleanerScript {
       if (window.flutter_inappwebview && window.flutter_inappwebview.callHandler) window.flutter_inappwebview.callHandler('onDrawerStateChanged', open);
     }
   }
+  function isActuallyRendered(node) {
+    if (!node || !node.isConnected) return false;
+    var r = node.getBoundingClientRect();
+    if (r.width < 40 || r.height < 40) return false;
+    if (r.bottom <= 0 || r.top >= window.innerHeight || r.right <= 0 || r.left >= window.innerWidth) return false;
+    var cur = node;
+    while (cur && cur.nodeType === 1) {
+      if (cur.getAttribute('aria-hidden') === 'true') return false;
+      var st = window.getComputedStyle(cur);
+      if (st.display === 'none' || st.visibility === 'hidden' || parseFloat(st.opacity) < 0.05) return false;
+      cur = cur.parentElement || (cur.getRootNode && cur.getRootNode().host) || null;
+    }
+    return true;
+  }
+  function isModalVisible(el) {
+    if (!el || !el.isConnected) return false;
+    if (el.getAttribute('aria-hidden') === 'true' || el.getAttribute('open') === 'false' || el.getAttribute('is-open') === 'false') return false;
+    var subSel = '.s-modal-body, .s-modal-wrapper, .s-modal-sub-wrapper, .s-modal-content, .s-search-results, [role="dialog"], iframe';
+    var subs = el.querySelectorAll(subSel);
+    if ((!subs || !subs.length) && el.shadowRoot) subs = el.shadowRoot.querySelectorAll(subSel);
+    if (subs && subs.length) {
+      for (var i = 0; i < subs.length; i++) {
+        if (isActuallyRendered(subs[i])) return true;
+      }
+      return false;
+    }
+    return isActuallyRendered(el);
+  }
+  function isAnyOverlayOpen() {
+    if (isDrawerOpen()) return true;
+    var modals = document.querySelectorAll('salla-login-modal, salla-modal, salla-search, .s-login-modal, .s-modal, [role="dialog"]');
+    for (var i = 0; i < modals.length; i++) {
+      if (isModalVisible(modals[i])) return true;
+    }
+    return false;
+  }
   function updateCartH() {
     if (window.location.pathname.indexOf('/cart') !== -1) {
       var bar = document.querySelector('.cart-submit-wrap, [class*="cart-summary-sticky"], [class*="sticky-cart"]');
@@ -61,10 +97,6 @@ class DomCleanerScript {
     var bar = window._vCartBar && window._vCartBar.isConnected ? window._vCartBar : null;
     if (!bar) { bar = document.querySelector('.cart-submit-wrap, [class*="cart-summary-sticky"], [class*="sticky-cart"]'); if (bar) window._vCartBar = bar; }
     if (bar) { bar.style.setProperty('bottom', '82px', 'important'); bar.style.setProperty('z-index', '25', 'important'); }
-  }
-  function isAnyOverlayOpen() {
-    if (isDrawerOpen() || (document.body && document.body.classList.contains('modal-is-open'))) return true;
-    return !!document.querySelector('salla-login-modal[open], salla-login-modal[is-open], salla-modal[open], salla-modal[is-open], salla-search.is-open, salla-search[open], [role="dialog"][open], [role="dialog"].is-open, .s-modal.is-open');
   }
   function hideFloatingWhatsApp() {
     var list = document.querySelectorAll('salla-chat-widget, .salla-chat-widget, #wa-widget-send-button, [id*="moatmt"], [class*="moatmt"], [id*="widget-host"], [class*="widget-host"], moatmt-widget-host, #moatmt_chat_widget, #moatmt-widget-send-button, .moatmt-chat-box');
@@ -110,38 +142,62 @@ class DomCleanerScript {
     hideFloatingWhatsApp();
   }
   var lastState = null, updateTimer = null;
-  function updateOverlay() {
-    if (window._vTouch || window._vScroll) return;
+  function updateOverlay(forceSync) {
+    if (!forceSync && (window._vTouch || window._vScroll)) return;
     injectSafeStyle(); watchBodyForMoatmt(); checkDrawer(); updateCartH(); liftCartSummary();
     var isOpen = isAnyOverlayOpen(); updateButtons(isOpen);
-    if (isOpen !== lastState) { lastState = isOpen; if (window.flutter_inappwebview && window.flutter_inappwebview.callHandler) window.flutter_inappwebview.callHandler('onModalState', isOpen); }
+    if (forceSync || isOpen !== lastState) {
+      lastState = isOpen;
+      if (window.flutter_inappwebview && window.flutter_inappwebview.callHandler) {
+        window.flutter_inappwebview.callHandler('onModalState', isOpen);
+      }
+    }
   }
-  function scheduleUpdate() { if (window._vTouch || window._vScroll) return; if (updateTimer) clearTimeout(updateTimer); updateTimer = setTimeout(updateOverlay, 200); }
-  window._velinaForceSync = updateOverlay;
+  function scheduleUpdate(forceSync) {
+    if (!forceSync && (window._vTouch || window._vScroll)) return;
+    if (updateTimer) clearTimeout(updateTimer);
+    updateTimer = setTimeout(function() { updateOverlay(!!forceSync); }, 200);
+  }
+  window._velinaForceSync = function(force) { updateOverlay(force !== false); };
   if (!window._velinaWatcher) {
     window._velinaWatcher = true;
     watchBodyForMoatmt();
     window.addEventListener('touchstart', function() { window._vTouch = true; }, { passive: true });
-    window.addEventListener('touchend', function() { window._vTouch = false; if (window.location.pathname.indexOf('/cart') !== -1) scheduleUpdate(); }, { passive: true });
+    window.addEventListener('touchend', function() {
+      window._vTouch = false;
+      if (window.location.pathname.indexOf('/cart') !== -1) scheduleUpdate(false);
+      setTimeout(function() { updateOverlay(true); }, 380);
+    }, { passive: true });
     window.addEventListener('touchcancel', function() { window._vTouch = false; }, { passive: true });
-    window.addEventListener('scroll', function() { window._vScroll = true; clearTimeout(window._vScrollTimer); window._vScrollTimer = setTimeout(function() { window._vScroll = false; if (window.location.pathname.indexOf('/cart') !== -1) scheduleUpdate(); }, 150); }, { passive: true });
-    document.addEventListener('DOMContentLoaded', updateOverlay); window.addEventListener('load', updateOverlay);
+    window.addEventListener('scroll', function() {
+      window._vScroll = true;
+      clearTimeout(window._vScrollTimer);
+      window._vScrollTimer = setTimeout(function() {
+        window._vScroll = false;
+        if (window.location.pathname.indexOf('/cart') !== -1) scheduleUpdate(false);
+        if (lastState === true) updateOverlay(true);
+      }, 150);
+    }, { passive: true });
+    document.addEventListener('DOMContentLoaded', function() { updateOverlay(true); });
+    window.addEventListener('load', function() { updateOverlay(true); });
     setTimeout(hideFloatingWhatsApp, 1000);
     setTimeout(hideFloatingWhatsApp, 3000);
     document.addEventListener('click', function(e) {
       var t = e.target; if (t && t.closest && (t.closest('.swiper') || t.closest('salla-slider') || t.closest('[class*="slider"]'))) return;
-      setTimeout(updateOverlay, 30); setTimeout(scheduleUpdate, 200);
+      setTimeout(function() { updateOverlay(false); }, 40);
+      setTimeout(function() { updateOverlay(true); }, 350);
+      setTimeout(function() { updateOverlay(true); }, 650);
     }, { passive: true });
     new MutationObserver(function(muts) {
       if (window._vTouch || window._vScroll) return;
       for (var i = 0; i < muts.length; i++) {
         var n = muts[i].target, el = n && n.nodeType === 1 ? n : (n ? n.parentElement : null);
         if (el && el.closest && el.closest('.swiper, salla-slider, [class*="slider"], [class*="carousel"], form, .product-form, salla-add-product-button, salla-quick-buy, .sticky-product-bar')) continue;
-        scheduleUpdate(); break;
+        scheduleUpdate(false); break;
       }
-    }).observe(document.documentElement, { attributeFilter: ['class', 'open', 'is-open'], attributes: true, childList: true, subtree: true });
+    }).observe(document.documentElement, { attributeFilter: ['class', 'open', 'is-open', 'style', 'aria-hidden'], attributes: true, childList: true, subtree: true });
   }
-  updateOverlay();
+  updateOverlay(true);
   } catch(e) {}
 })();
 ''';
